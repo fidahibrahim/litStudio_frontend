@@ -22,10 +22,13 @@ const MyBlogs = () => {
         const fetchBlogs = async () => {
             try {
                 const response = await fetchUserBlogs(userId);
-                console.log(response,'response in mYblogs pages');
+                console.log(response, 'response in mYblogs pages');
                 if (response.data && response.data.data) {
                     const sortedBlogs = [...response.data.data].sort((a, b) => {
-                        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+                        // Handle optional createdAt field
+                        const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+                        const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+                        return dateB - dateA;
                     });
                     setBlogs(sortedBlogs);
                 }
@@ -104,7 +107,7 @@ const MyBlogs = () => {
                                 <div key={blog._id} className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300 border border-gray-100">
                                     <Link to={`/blog/${blog._id}`} className="block">
                                         <img
-                                            src={blog.image}
+                                            src={blog.image as string || '/placeholder-image.jpg'}
                                             alt={blog.title}
                                             className="w-full h-48 object-cover"
                                             onError={(e) => {
@@ -121,7 +124,7 @@ const MyBlogs = () => {
                                         <p className="text-gray-600 mb-4">{createExcerpt(blog.content)}</p>
                                         <div className="flex items-center justify-between">
                                             <span className="text-sm text-gray-500">
-                                                {new Date(blog.createdAt).toLocaleDateString()}
+                                                {blog.createdAt ? new Date(blog.createdAt).toLocaleDateString() : 'Unknown date'}
                                             </span>
                                             <div className="flex gap-2">
                                                 <Link to={`/editBlog/${blog._id}`}>
@@ -129,10 +132,9 @@ const MyBlogs = () => {
                                                         <Pencil size={18} className="text-gray-600" />
                                                     </button>
                                                 </Link>
-                                                {/* Delete button commented out as in your original code */}
                                                 <button
                                                     className="p-2 rounded-full hover:bg-gray-100 transition-colors"
-                                                    onClick={() => handleDelete(blog._id)}
+                                                    onClick={() => blog._id && handleDelete(blog._id)}
                                                 >
                                                     <Trash size={18} className="text-red-500" />
                                                 </button>

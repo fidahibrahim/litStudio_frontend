@@ -35,10 +35,15 @@ const BlogPage = () => {
         fetchBlogDetails();
     }, [blogId]);
 
-    const formatDate = (dateString) => {
-        const options = { year: 'numeric', month: 'long', day: 'numeric' };
+    const formatDate = (dateString: string) => {
+        const options: Intl.DateTimeFormatOptions = {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        };
         return new Date(dateString).toLocaleDateString(undefined, options);
     };
+
 
     if (loading) {
         return (
@@ -122,7 +127,13 @@ const BlogPage = () => {
                         {/* Featured image */}
                         <div className="w-full h-72 md:h-96 relative">
                             <img
-                                src={blog.image || '/placeholder-image.jpg'}
+                                src={
+                                    blog.image
+                                        ? typeof blog.image === 'string'
+                                            ? blog.image
+                                            : URL.createObjectURL(blog.image)
+                                        : '/placeholder-image.jpg'
+                                }
                                 alt={blog.title}
                                 className="w-full h-full object-cover"
                                 onError={(e) => {
@@ -141,10 +152,10 @@ const BlogPage = () => {
 
                             <div className="flex flex-wrap items-center gap-4 text-gray-600 mb-6">
                                 {/* Author */}
-                                {blog.userId && blog.userId.name && (
+                                {blog.authorId && blog.authorId.name && (
                                     <div className="flex items-center gap-1">
                                         <User size={16} className="text-gray-500" />
-                                        <span>{blog.userId.name}</span>
+                                        <span>{blog.authorId.name}</span>
                                     </div>
                                 )}
 
@@ -182,13 +193,17 @@ const BlogPage = () => {
                                     <div className="flex items-center justify-between text-sm text-gray-500">
                                         <div className="flex items-center gap-1">
                                             <Clock size={14} />
-                                            <span>Posted on {formatDate(blog.createdAt)}</span>
+                                            <span>
+                                                Posted on {blog.createdAt ? formatDate(blog.createdAt) : 'Unknown date'}
+                                            </span>
                                         </div>
 
                                         {blog.updatedAt && blog.updatedAt !== blog.createdAt && (
                                             <div className="flex items-center gap-1">
                                                 <Clock size={14} />
-                                                <span>Updated on {formatDate(blog.updatedAt)}</span>
+                                                <span>
+                                                    Updated on {blog.updatedAt ? formatDate(blog.updatedAt) : 'Unknown date'}
+                                                </span>
                                             </div>
                                         )}
                                     </div>

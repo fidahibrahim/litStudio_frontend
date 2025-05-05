@@ -6,8 +6,26 @@ import Header from '../components/Header';
 import Footer from '../components/Footer';
 import { Link } from 'react-router-dom';
 
-const BlogCard = ({ blog }) => {
-    const stripHtml = (html) => {
+interface Author {
+  _id: string;
+  name: string;
+}
+
+interface Blog {
+  _id: string;
+  title: string;
+  content: string;
+  image?: string;
+  authorId: Author;
+  createdAt: string;
+}
+
+interface BlogCardProps {
+  blog: Blog;
+}
+
+const BlogCard = ({ blog }: BlogCardProps) => {
+    const stripHtml = (html: string): string => {
         const temp = document.createElement('div');
         temp.innerHTML = html;
         return temp.textContent || temp.innerText || '';
@@ -82,22 +100,24 @@ const BlogCard = ({ blog }) => {
 };
 
 const Explore = () => {
-    const [blogs, setBlogs] = useState([]);
+    const [blogs, setBlogs] = useState<Blog[]>([]);
     const [searchTerm, setSearchTerm] = useState('');
     const [isLoading, setIsLoading] = useState(true);
-    const [error, setError] = useState(null);
+    const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
         const fetchBlogs = async () => {
             try {
-                const response = await listBlogs()
-
+                const response = await listBlogs();
+                
+                // Type assertion or proper type handling based on your API response structure
                 setBlogs(response.data.data);
                 setIsLoading(false);
-            } catch (error) {
-                handleError(error)
+            } catch (err) {
+                handleError(err);
                 setIsLoading(false);
                 setBlogs([]);
+                setError(err instanceof Error ? err.message : 'An unknown error occurred');
             }
         };
 
@@ -113,7 +133,6 @@ const Explore = () => {
 
     if (error) {
         return (
-
             <div className="max-w-screen-xl mx-auto px-4 py-16 text-center">
                 <div className="bg-red-50 border border-red-200 rounded-lg p-6">
                     <h3 className="text-xl font-medium text-red-800 mb-2">Something went wrong</h3>

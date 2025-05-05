@@ -30,6 +30,8 @@ export interface IBlog {
         name: string;
         email: string;
     };
-    image?: File | null;
+    image?: string | File | null;
     createdAt?: string;
+    updatedAt?: string;
+    tags?: string[];
 }

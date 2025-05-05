@@ -1,6 +1,6 @@
 import { useRef, useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Upload, Save, Eye, Image, Tag, X } from 'lucide-react';
+import { ArrowLeft, Upload, Save, Eye } from 'lucide-react';
 import { useFormik } from 'formik';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
@@ -27,21 +27,40 @@ import { useSelector } from 'react-redux';
 import { rootState } from '../redux/store';
 import { toast } from 'sonner';
 
+// Define interfaces for better typing
+interface BlogFormValues {
+    title: string;
+    content: string;
+    image: string;
+    tags: string[];
+}
+
+interface BlogData {
+    _id: string;
+    title: string;
+    content: string;
+    image?: string;
+    tags: string[];
+    createdAt?: string;
+    updatedAt?: string;
+    author?: string;
+}
+
 const EditBlog = () => {
-    const { blogId } = useParams();
+    const { blogId } = useParams<{ blogId: string }>();
     const navigate = useNavigate();
     const [loading, setLoading] = useState(true);
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const [imagePreview, setImagePreview] = useState(null);
-    const [imageFile, setImageFile] = useState(null);
+    const [imagePreview, setImagePreview] = useState<string | null>(null);
+    const [imageFile, setImageFile] = useState<File | null>(null);
     const [wordCount, setWordCount] = useState(0);
     const [readingTime, setReadingTime] = useState(0);
     const [tagInput, setTagInput] = useState('');
     const [showPreview, setShowPreview] = useState(false);
-    const [originalBlog, setOriginalBlog] = useState(null);
+    const [originalBlog, setOriginalBlog] = useState<BlogData | null>(null);
 
     const userId = useSelector((state: rootState) => state.user.userData?._id);
-    const dropRef = useRef(null);
+    const dropRef = useRef<HTMLDivElement>(null);
 
     const editor = useEditor({
         extensions: [
@@ -70,14 +89,14 @@ const EditBlog = () => {
         content: '',
         onUpdate: ({ editor }) => {
             const text = editor.getHTML().replace(/<[^>]*>/g, ' ');
-            const words = text.split(/\s+/).filter(word => word.length > 0);
+            const words = text.split(/\s+/).filter((word: string) => word.length > 0);
             setWordCount(words.length);
             setReadingTime(Math.ceil(words.length / 200));
             formik.setFieldValue('content', editor.getHTML());
         }
     });
 
-    const formik = useFormik({
+    const formik = useFormik<BlogFormValues>({
         initialValues: {
             title: '',
             content: '',
@@ -99,7 +118,9 @@ const EditBlog = () => {
                     formData.append('image', imageFile);
                 }
 
-                formData.append('blogId', blogId!);
+                if (blogId) {
+                    formData.append('blogId', blogId);
+                }
 
                 if (!imageFile && imagePreview && originalBlog?.image) {
                     formData.append('keepExistingImage', 'true');
@@ -144,7 +165,7 @@ const EditBlog = () => {
                         editor.commands.setContent(blog.content);
 
                         const text = blog.content.replace(/<[^>]*>/g, ' ');
-                        const words = text.split(/\s+/).filter(word => word.length > 0);
+                        const words = text.split(/\s+/).filter((word: string) => word.length > 0);
                         setWordCount(words.length);
                         setReadingTime(Math.ceil(words.length / 200));
                     }
@@ -162,8 +183,8 @@ const EditBlog = () => {
         }
     }, [blogId, editor]);
 
-    const handleImageChange = (e: any) => {
-        const file = e.target.files[0];
+    const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
         if (file) {
             setImageFile(file);
             formik.setFieldValue('image', file.name);
@@ -180,7 +201,7 @@ const EditBlog = () => {
         }
     };
 
-    const removeTag = (tagToRemove: any) => {
+    const removeTag = (tagToRemove: string) => {
         const newTags = formik.values.tags.filter(tag => tag !== tagToRemove);
         formik.setFieldValue('tags', newTags);
     };
@@ -239,8 +260,8 @@ const EditBlog = () => {
                                 onBlur={formik.handleBlur}
                                 placeholder="Enter an engaging title for your blog"
                                 className={`w-full px-4 py-3 rounded-lg border ${formik.touched.title && formik.errors.title
-                                        ? 'border-red-500 ring-1 ring-red-500'
-                                        : 'border-gray-300 focus:ring-2 focus:ring-blue-500'
+                                    ? 'border-red-500 ring-1 ring-red-500'
+                                    : 'border-gray-300 focus:ring-2 focus:ring-blue-500'
                                     } focus:border-transparent`}
                             />
                             {formik.touched.title && formik.errors.title && (
@@ -261,8 +282,8 @@ const EditBlog = () => {
                                     onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addTag())}
                                     placeholder="Add a tag and press Enter"
                                     className={`flex-grow px-4 py-2 rounded-l-lg border ${formik.touched.tags && formik.errors.tags
-                                            ? 'border-red-500'
-                                            : 'border-gray-300 focus:ring-2 focus:ring-blue-500'
+                                        ? 'border-red-500'
+                                        : 'border-gray-300 focus:ring-2 focus:ring-blue-500'
                                         } focus:border-transparent`}
                                 />
                                 <button
@@ -304,8 +325,8 @@ const EditBlog = () => {
                             <div
                                 ref={dropRef}
                                 className={`mt-1 flex flex-col items-center justify-center border-2 border-dashed ${formik.touched.image && formik.errors.image
-                                        ? 'border-red-300 bg-red-50'
-                                        : 'border-gray-300 bg-gray-50'
+                                    ? 'border-red-300 bg-red-50'
+                                    : 'border-gray-300 bg-gray-50'
                                     } rounded-lg p-6 transition-colors`}
                             >
                                 {imagePreview ? (
@@ -330,8 +351,8 @@ const EditBlog = () => {
                                 ) : (
                                     <div className="space-y-2 text-center">
                                         <Upload className={`mx-auto h-12 w-12 ${formik.touched.image && formik.errors.image
-                                                ? 'text-red-400'
-                                                : 'text-gray-400'
+                                            ? 'text-red-400'
+                                            : 'text-gray-400'
                                             }`} />
                                         <div className="text-sm text-gray-600">
                                             <label htmlFor="file-upload" className="relative cursor-pointer rounded-md font-medium text-blue-600 hover:text-blue-500">
@@ -363,8 +384,8 @@ const EditBlog = () => {
                                 Blog Content <span className="text-red-500">*</span>
                             </label>
                             <div className={`bg-white rounded-lg border ${formik.touched.content && formik.errors.content
-                                    ? 'border-red-500'
-                                    : 'border-gray-300'
+                                ? 'border-red-500'
+                                : 'border-gray-300'
                                 } overflow-hidden`}>
                                 <EditorMenuBar editor={editor} />
                                 <EditorContent
